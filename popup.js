@@ -1,17 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const apiKey = '';
+    const saveKeyButton = document.getElementById('save-key');
+    const status = document.getElementById('status');
 
-    chrome.storage.local.set({ 'openai-api-key': apiKey }, function () {
-        console.log('API key securely stored in local storage.');
-    });
+    // Save the API key to Chrome storage
+    saveKeyButton.addEventListener('click', () => {
+        const apiKey = document.getElementById('api-key').value;
+        if (apiKey.trim() === '') {
+            status.textContent = 'API key cannot be empty.';
+            return;
+        }
 
-    // Get the active tab and execute the content script
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        let activeTab = tabs[0].id;
+        // Save the API key in storage
+        chrome.storage.local.set({ openaiApiKey: apiKey }, () => {
+            status.textContent = 'API key saved securely!';
 
-        chrome.scripting.executeScript({
-            target: { tabId: activeTab },
-            files: ['content.js']
+            // Send a message to the content script to inject buttons
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id, { action: 'injectButtons' });
+            });
         });
     });
 });

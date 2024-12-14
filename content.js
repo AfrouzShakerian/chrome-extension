@@ -1,74 +1,74 @@
-function getMainContent() {
-    const paragraphs = Array.from(document.body.querySelectorAll('p'));
-    let mainText = paragraphs.map(p => p.innerText.trim()).filter(text => text).join('\n\n');
+// Content script to simplify text using OpenAI's updated API
 
-    if (mainText) {
-        console.log("Main content extracted: ", mainText);
-        fetchSimplifiedText(mainText);
-    } else {
-        console.log("No main content found.");
-    }
-}
+console.log('Content script is running...');
 
-function fetchSimplifiedText(content) {
-    chrome.storage.local.get('openai-api-key', function (result) {
-        const apiKey = result['openai-api-key'];
-        console.log('Retrieved API Key:', apiKey);
+// Listen for messages from the popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'injectButtons') {
+        console.log('Injecting buttons...');
 
-        if (apiKey) {
-            const payload = {
-                model: 'text-davinci-003',
-                prompt: `Simplify this text: ${content}`,
-                max_tokens: 100
-            };
-            console.log('Payload:', JSON.stringify(payload));
+        // Find all paragraphs
+        const paragraphs = document.querySelectorAll('p');
+        console.log(`Found ${paragraphs.length} paragraphs.`);
 
-            fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: 'gpt-3.5-turbo', // You can replace with your desired model
-                    messages: [{
-                        role: 'user',
-                        content: `Simplify this text: ${content}`
-                    }],
-                    max_tokens: 100
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Simplified Text:', data?.choices?.[0]?.message?.content || 'No response choices');
-                })
-                .catch(error => console.error('Error during API call:', error));
+        paragraphs.forEach((p, index) => {
+            const simplifyButton = document.createElement('button');
+            simplifyButton.textContent = 'Simplify';
+            simplifyButton.style.marginLeft = '10px';
 
-        } else {
-            console.error('API key not found.');
-        }
-    });
-}
+            const showOriginalButton = document.createElement('button');
+            showOriginalButton.textContent = 'Show Original';
+            showOriginalButton.style.marginLeft = '10px';
 
+            // Attach buttons after the paragraph
+            p.insertAdjacentElement('afterend', simplifyButton);
+            p.insertAdjacentElement('afterend', showOriginalButton);
 
-// Run the content extraction and simplification
-getMainContent();
+            // Save the original text
+            const originalText = p.textContent;
 
-chrome.storage.local.get('openai-api-key', function (result) {
-    const apiKey = result['openai-api-key'];
-    if (apiKey) {
-        fetch('https://api.openai.com/v1/models', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Available Models:', data);
-            })
-            .catch(error => console.error('Error:', error));
-    } else {
-        console.error('API key is not stored!');
+            // Handle simplify button click
+            simplifyButton.addEventListener('click', () => {
+                chrome.storage.local.get('openaiApiKey', (result) => {
+                    const apiKey = result.openaiApiKey;
+                    if (!apiKey) {
+                        alert('API key is missing! Please set it in the popup.');
+                        return;
+                    }
+
+                    // Call OpenAI API to simplify text
+                    fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-3.5-turbo', // Use gpt-3.5-turbo or gpt-4
+                            messages: [
+                                { role: 'system', content: 'You are a helpful assistant that simplifies text.' },
+                                { role: 'user', content: `Simplify this text:\n\n${originalText}` }
+                            ],
+                            max_tokens: 100,
+                            temperature: 0.7
+                        })
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.choices && data.choices[0].message.content) {
+                                p.textContent = data.choices[0].message.content.trim();
+                            } else {
+                                console.error('Error simplifying text:', data);
+                            }
+                        })
+                        .catch((error) => console.error('OpenAI API error:', error));
+                });
+            });
+
+            // Handle show original button click
+            showOriginalButton.addEventListener('click', () => {
+                p.textContent = originalText;
+            });
+        });
     }
 });
