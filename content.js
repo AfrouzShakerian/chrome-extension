@@ -12,8 +12,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log('Injecting buttons...');
 
         document.querySelectorAll('p').forEach((p, index) => {
-            // Store the original HTML structure
-            const originalHTML = p.innerHTML;
+            const originalHTML = p.innerHTML; // Store the original paragraph HTML
+
+            // Extract links from the paragraph
+            const links = Array.from(p.querySelectorAll('a')).map((a) => {
+                return { text: a.textContent, href: a.href };
+            });
+
+            // Get plain text without HTML tags
+            const originalText = p.innerText;
 
             // Create button container
             const buttonContainer = document.createElement('div');
@@ -43,9 +50,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         return;
                     }
 
-                    // Extract text content only (ignore HTML tags)
-                    const originalText = p.innerText;
-
                     fetch('https://api.openai.com/v1/chat/completions', {
                         method: 'POST',
                         headers: {
@@ -62,15 +66,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             temperature: 0.7
                         })
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.choices && data.choices[0].message.content) {
-                            p.innerText = data.choices[0].message.content.trim(); // Replace text, keeping HTML safe
-                        } else {
-                            console.error('Error simplifying text:', data);
-                        }
-                    })
-                    .catch(error => console.error('OpenAI API error:', error));
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.choices && data.choices[0].message.content) {
+                                // Replace paragraph text with simplified content
+                                p.innerText = data.choices[0].message.content.trim() + ".";
+
+                                // Append links at the end of the paragraph
+                                links.forEach((link) => {
+                                    const linkElement = document.createElement('a');
+                                    linkElement.href = link.href;
+                                    linkElement.textContent = ` ${link.text}`;
+                                    linkElement.style.marginLeft = '5px';
+                                    linkElement.target = "_blank"; // Open links in a new tab
+                                    p.appendChild(linkElement);
+                                });
+                            } else {
+                                console.error('Error simplifying text:', data);
+                            }
+                        })
+                        .catch(error => console.error('OpenAI API error:', error));
                 });
             });
 
