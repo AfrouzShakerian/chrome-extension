@@ -6,21 +6,27 @@ document.head.appendChild(style);
 
 console.log('Content script is running...');
 
-// Wait for messages from the popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'injectButtons') {
         console.log('Injecting buttons...');
 
         document.querySelectorAll('p').forEach((p, index) => {
-            const originalHTML = p.innerHTML; // Store the original paragraph HTML
+            // Filter out empty paragraphs or those with only non-text content
+            const visibleText = p.innerText.trim();
+            const hasOnlyImages = p.children.length > 0 && Array.from(p.children).every(child => child.tagName === 'IMG');
 
-            // Extract links from the paragraph
+            if (!visibleText || hasOnlyImages) {
+                console.log(`Skipping paragraph ${index + 1}: Empty or contains only images.`);
+                return; // Skip this paragraph
+            }
+
+            const originalHTML = p.innerHTML; // Store the original paragraph HTML
+            const originalText = p.innerText; // Store the plain text of the paragraph
+
+            // Extract all links from the paragraph
             const links = Array.from(p.querySelectorAll('a')).map((a) => {
                 return { text: a.textContent, href: a.href };
             });
-
-            // Get plain text without HTML tags
-            const originalText = p.innerText;
 
             // Create button container
             const buttonContainer = document.createElement('div');
@@ -70,9 +76,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         .then(data => {
                             if (data.choices && data.choices[0].message.content) {
                                 // Replace paragraph text with simplified content
-                                p.innerText = data.choices[0].message.content.trim() + ".";
-
-                                // Append links at the end of the paragraph
+                                const simplifiedText = data.choices[0].message.content.trim();
+                                p.innerText = simplifiedText.endsWith('.') || simplifiedText.endsWith('!') || simplifiedText.endsWith('?')
+                                    ? simplifiedText
+                                    : simplifiedText + ".";
+                                // Append extracted links at the end of the paragraph
                                 links.forEach((link) => {
                                     const linkElement = document.createElement('a');
                                     linkElement.href = link.href;
