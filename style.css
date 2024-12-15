@@ -1,0 +1,34 @@
+.button-container {
+    margin-top: 5px;
+    display: flex;
+    gap: 8px;
+    /* Space between buttons */
+}
+
+.simplify-btn,
+.original-btn {
+    background-color: #4CAF50;
+    /* Green */
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+}
+
+.simplify-btn:hover {
+    background-color: #45a049;
+}
+
+.original-btn {
+    background-color: #ccc;
+    /* Gray */
+    color: #000;
+}
+
+.original-btn:hover {
+    background-color: #bbb;
+}
