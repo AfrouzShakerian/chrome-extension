@@ -55,7 +55,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         alert('API key is missing! Please set it in the popup.');
                         return;
                     }
-
+            
                     fetch('https://api.openai.com/v1/chat/completions', {
                         method: 'POST',
                         headers: {
@@ -72,30 +72,47 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             temperature: 0.7
                         })
                     })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.choices && data.choices[0].message.content) {
-                                // Replace paragraph text with simplified content
-                                const simplifiedText = data.choices[0].message.content.trim();
-                                p.innerText = simplifiedText.endsWith('.') || simplifiedText.endsWith('!') || simplifiedText.endsWith('?')
-                                    ? simplifiedText
-                                    : simplifiedText + ".";
-                                // Append extracted links at the end of the paragraph
-                                links.forEach((link) => {
-                                    const linkElement = document.createElement('a');
-                                    linkElement.href = link.href;
-                                    linkElement.textContent = ` ${link.text}`;
-                                    linkElement.style.marginLeft = '5px';
-                                    linkElement.target = "_blank"; // Open links in a new tab
-                                    p.appendChild(linkElement);
-                                });
-                            } else {
-                                console.error('Error simplifying text:', data);
-                            }
-                        })
-                        .catch(error => console.error('OpenAI API error:', error));
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.choices && data.choices[0].message.content) {
+                            // Replace paragraph text with simplified content
+                            const simplifiedText = data.choices[0].message.content.trim();
+                            p.innerText = simplifiedText.endsWith('.') || simplifiedText.endsWith('!') || simplifiedText.endsWith('?')
+                                ? simplifiedText
+                                : simplifiedText + ".";
+
+            
+                            // Create a container for the links
+                            const linkContainer = document.createElement('span');
+                            linkContainer.style.marginLeft = '10px';
+            
+                            // Append links with separators
+                            links.forEach((link, index) => {
+                                const linkElement = document.createElement('a');
+                                linkElement.href = link.href;
+                                linkElement.textContent = link.text;
+                                linkElement.style.marginLeft = index > 0 ? '5px' : '0'; // Add spacing between links
+                                linkElement.target = '_blank'; // Open links in a new tab
+            
+                                // Add separator if it's not the last link
+                                if (index < links.length - 1) {
+                                    const separator = document.createTextNode(' | ');
+                                    linkContainer.appendChild(linkElement);
+                                    linkContainer.appendChild(separator);
+                                } else {
+                                    linkContainer.appendChild(linkElement);
+                                }
+                            });
+            
+                            // Append the link container to the paragraph
+                            p.appendChild(linkContainer);
+                        } else {
+                            console.error('Error simplifying text:', data);
+                        }
+                    })
+                    .catch(error => console.error('OpenAI API error:', error));
                 });
-            });
+            });            
 
             // Show Original Button Logic
             originalButton.addEventListener('click', () => {
