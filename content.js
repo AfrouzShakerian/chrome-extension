@@ -65,12 +65,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         body: JSON.stringify({
                             model: 'gpt-3.5-turbo',
                             messages: [
-                                { role: 'system', content: 'Simplify the following text.' },
-                                { role: 'user', content: originalText }
+                                {
+                                    role: 'system',
+                                    content: `
+                                        You are a helpful assistant that simplifies text for people with cognitive disabilities.
+                                        - If the input text has more than one sentence or is long, simplify it using short bullet points.
+                                        - If the input text is already a short sentence, simplify it into one clear, direct sentence.
+                                        Use simple words, short sentences, and avoid jargon. The goal is to make the text clear, easy to understand, and concise.
+                                        `
+                                },
+                                {
+                                    role: 'user',
+                                    content: `Simplify the following text:\n\n${originalText}`
+                                }
                             ],
-                            max_tokens: 100,
-                            temperature: 0.7
-                        })
+                            max_tokens: 200,
+                            temperature: 0.4
+                        })                        
                     })
                     .then(response => response.json())
                     .then(data => {
