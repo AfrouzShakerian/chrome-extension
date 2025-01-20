@@ -1,23 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const saveKeyButton = document.getElementById('save-key');
-    const status = document.getElementById('status');
+    const toggleExtension = document.getElementById('toggle-extension');
+    const toggleStatus = document.getElementById('toggle-status');
+    const optionsButton = document.getElementById('options-button');
 
-    // Save the API key to Chrome storage
-    saveKeyButton.addEventListener('click', () => {
-        const apiKey = document.getElementById('api-key').value;
-        if (apiKey.trim() === '') {
-            status.textContent = 'API key cannot be empty.';
-            return;
-        }
+    // Initialize toggle state from storage
+    chrome.storage.local.get('extensionActive', (data) => {
+        const isActive = data.extensionActive || false;
+        toggleExtension.checked = isActive;
+        toggleStatus.textContent = isActive ? 'Extension is Activated' : 'Extension is Deactivated';
+    });
 
-        // Save the API key in storage
-        chrome.storage.local.set({ openaiApiKey: apiKey }, () => {
-            status.textContent = 'API key saved securely!';
+    // Handle toggle change
+    toggleExtension.addEventListener('change', () => {
+        const isActive = toggleExtension.checked;
+        chrome.storage.local.set({ extensionActive: isActive }, () => {
+            toggleStatus.textContent = isActive ? 'Extension is Activated' : 'Extension is Deactivated';
 
-            // Send a message to the content script to inject buttons
+            // Send message to content scripts
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id, { action: 'injectButtons' });
+                chrome.tabs.sendMessage(tabs[0].id, { action: isActive ? 'activate' : 'deactivate' });
             });
         });
+    });
+
+    // Open options page
+    optionsButton.addEventListener('click', () => {
+        chrome.runtime.openOptionsPage();
     });
 });

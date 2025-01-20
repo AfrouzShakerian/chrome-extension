@@ -9,13 +9,22 @@
 <body class="popup-body">
     <div class="popup-container">
         <h1 class="popup-header">OpenAI Simplifier</h1>
-        <form id="api-key-form">
-            <label for="api-key" class="input-label">Enter API Key:</label>
-            <input type="password" id="api-key" class="input-field" placeholder="Your OpenAI API Key" />
-            <button type="button" id="save-key" class="btn-primary">Save API Key</button>
-        </form>
-        <p id="status" class="status-message"></p>
+
+        <!-- Toggle Switch Section -->
+        <div class="toggle-container">
+            <span id="toggle-status">Extension is Deactivated</span>
+            <div class="toggle-button-container">
+                <label class="switch">
+                    <input type="checkbox" id="toggle-extension">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Options Button -->
+        <button id="options-button" class="btn-primary">Options</button>
     </div>
+
+    <script src="popup.js"></script>
 </body>
-<script src="popup.js"></script>
 </html>

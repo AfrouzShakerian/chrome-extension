@@ -6,6 +6,9 @@ document.head.appendChild(style);
 
 console.log('Content script is running...');
 
+// Variable to store the IntersectionObserver instance
+let observer = null;
+
 // Function to simplify paragraphs
 function simplifyParagraph(paragraph) {
     if (paragraph.dataset.simplified) return; // Skip already processed paragraphs
@@ -106,14 +109,11 @@ function simplifyParagraph(paragraph) {
 function addHoverListeners(paragraph) {
     paragraph.addEventListener('mouseover', () => {
         if (paragraph.dataset.original) {
-            // Show original text without affecting child elements
             const textNode = paragraph.querySelector('.text-content');
             if (textNode) {
                 textNode.innerText = paragraph.dataset.original; // Show original text
             }
-
             paragraph.style.backgroundColor = ''; // Remove background color
-
             const buttonContainer = paragraph.querySelector('.button-container');
             if (buttonContainer) {
                 buttonContainer.style.visibility = 'visible'; // Show buttons
@@ -124,14 +124,11 @@ function addHoverListeners(paragraph) {
 
     paragraph.addEventListener('mouseout', () => {
         if (paragraph.dataset.simplified) {
-            // Show simplified text without affecting child elements
             const textNode = paragraph.querySelector('.text-content');
             if (textNode) {
                 textNode.innerText = paragraph.dataset.simplified; // Show simplified text
             }
-
             paragraph.style.backgroundColor = '#f0f8ff'; // Restore background color
-
             const buttonContainer = paragraph.querySelector('.button-container');
             if (buttonContainer) {
                 buttonContainer.style.visibility = 'hidden'; // Hide buttons
@@ -141,18 +138,54 @@ function addHoverListeners(paragraph) {
     });
 }
 
-// Use IntersectionObserver to detect visible paragraphs
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-            simplifyParagraph(entry.target); // Simplify paragraph
-            addHoverListeners(entry.target); // Add hover listeners
+// Start simplifying paragraphs
+function startSimplifying() {
+    observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                simplifyParagraph(entry.target); // Simplify paragraph
+                addHoverListeners(entry.target); // Add hover listeners
+            }
+        });
+    });
+
+    const paragraphs = document.querySelectorAll('p');
+    paragraphs.forEach((paragraph) => {
+        observer.observe(paragraph);
+    });
+}
+
+// Stop simplifying and reset paragraphs
+function stopSimplifying() {
+    if (observer) {
+        observer.disconnect(); // Stop observing paragraphs
+        observer = null;
+    }
+    const paragraphs = document.querySelectorAll('p');
+    paragraphs.forEach((paragraph) => {
+        if (paragraph.dataset.original) {
+            paragraph.innerText = paragraph.dataset.original; // Restore original text
+            paragraph.removeAttribute('data-simplified');
+            paragraph.style.backgroundColor = ''; // Reset background color
         }
     });
+    console.log('Simplification stopped.');
+}
+
+// Listen for activation/deactivation messages
+chrome.runtime.onMessage.addListener((message) => {
+    if (message.action === 'activate') {
+        console.log('Extension activated. Simplifying paragraphs...');
+        startSimplifying();
+    } else if (message.action === 'deactivate') {
+        console.log('Extension deactivated. Stopping simplification...');
+        stopSimplifying();
+    }
 });
 
-// Start observing all visible paragraphs
-const paragraphs = document.querySelectorAll('p');
-paragraphs.forEach((paragraph) => {
-    observer.observe(paragraph);
+// Check the activation state before running the script
+chrome.storage.local.get('extensionActive', (data) => {
+    if (data.extensionActive) {
+        startSimplifying(); // Simplify if active
+    }
 });
