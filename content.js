@@ -52,12 +52,48 @@ function simplifyParagraph(paragraph) {
         .then(data => {
             if (data.choices && data.choices[0].message.content) {
                 const simplifiedText = data.choices[0].message.content.trim();
+
+                // Wrap paragraph contents in a container
+                const parent = paragraph.parentNode;
+                const container = document.createElement('div');
+                container.className = 'paragraph-container';
+                parent.replaceChild(container, paragraph);
+                container.appendChild(paragraph);
+
+                // Wrap the paragraph text in a span for text-content
+                const textContent = document.createElement('span');
+                textContent.className = 'text-content';
+                textContent.innerText = simplifiedText;
+                paragraph.innerHTML = '';
+                paragraph.appendChild(textContent);
+
                 paragraph.dataset.original = originalText; // Store original text
                 paragraph.dataset.simplified = simplifiedText; // Store simplified text
-                paragraph.innerText = simplifiedText; // Replace text with simplified content
-                paragraph.style.backgroundColor = '#f0f8ff'; // Add background color to indicate simplification
+                paragraph.style.backgroundColor = '#f0f8ff'; // Add background color
                 paragraph.style.borderRadius = '4px'; // Add softer edges
                 paragraph.style.transition = 'background-color 0.3s ease-in-out'; // Smooth transition
+                paragraph.style.position = 'relative'; // Ensure relative positioning for button placement
+
+                // Add the button container
+                const buttonContainer = document.createElement('span');
+                buttonContainer.className = 'button-container';
+                buttonContainer.style.position = 'absolute';
+                buttonContainer.style.top = '0';
+                buttonContainer.style.right = '0';
+                buttonContainer.style.visibility = 'hidden'; // Default to hidden
+                buttonContainer.style.opacity = '0'; // Default to transparent
+
+                const simplifyButton = document.createElement('button');
+                simplifyButton.textContent = 'Simplify';
+                simplifyButton.className = 'simplify-btn';
+
+                const originalButton = document.createElement('button');
+                originalButton.textContent = 'Show Original';
+                originalButton.className = 'original-btn';
+
+                buttonContainer.appendChild(simplifyButton);
+                buttonContainer.appendChild(originalButton);
+                paragraph.appendChild(buttonContainer);
             } else {
                 console.error('Error simplifying text:', data);
             }
@@ -66,19 +102,41 @@ function simplifyParagraph(paragraph) {
     });
 }
 
-// Add hover listeners to show original text on hover
+// Add hover listeners to show original text and buttons on hover
 function addHoverListeners(paragraph) {
     paragraph.addEventListener('mouseover', () => {
         if (paragraph.dataset.original) {
-            paragraph.innerText = paragraph.dataset.original; // Show original text
+            // Show original text without affecting child elements
+            const textNode = paragraph.querySelector('.text-content');
+            if (textNode) {
+                textNode.innerText = paragraph.dataset.original; // Show original text
+            }
+
             paragraph.style.backgroundColor = ''; // Remove background color
+
+            const buttonContainer = paragraph.querySelector('.button-container');
+            if (buttonContainer) {
+                buttonContainer.style.visibility = 'visible'; // Show buttons
+                buttonContainer.style.opacity = '1'; // Make buttons fully visible
+            }
         }
     });
 
     paragraph.addEventListener('mouseout', () => {
         if (paragraph.dataset.simplified) {
-            paragraph.innerText = paragraph.dataset.simplified; // Show simplified text
+            // Show simplified text without affecting child elements
+            const textNode = paragraph.querySelector('.text-content');
+            if (textNode) {
+                textNode.innerText = paragraph.dataset.simplified; // Show simplified text
+            }
+
             paragraph.style.backgroundColor = '#f0f8ff'; // Restore background color
+
+            const buttonContainer = paragraph.querySelector('.button-container');
+            if (buttonContainer) {
+                buttonContainer.style.visibility = 'hidden'; // Hide buttons
+                buttonContainer.style.opacity = '0'; // Make buttons invisible
+            }
         }
     });
 }
@@ -97,10 +155,4 @@ const observer = new IntersectionObserver((entries) => {
 const paragraphs = document.querySelectorAll('p');
 paragraphs.forEach((paragraph) => {
     observer.observe(paragraph);
-
-    // Hide buttons for now if they exist
-    const buttonContainer = paragraph.nextElementSibling;
-    if (buttonContainer && buttonContainer.classList.contains('button-container')) {
-        buttonContainer.style.visibility = 'hidden';
-    }
 });

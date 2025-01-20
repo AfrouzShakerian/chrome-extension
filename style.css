@@ -69,15 +69,18 @@
 }
 
 .button-container {
-    margin-top: 5px;
-    display: flex;
-    gap: 8px;
-    /* Space between buttons */
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.paragraph-container:hover .button-container {
+    visibility: visible;
+    opacity: 1;
 }
 
 .simplify-btn,
 .original-btn {
-    visibility: hidden;
     background-color: #4CAF50;
     border: none;
     color: white;
@@ -89,16 +92,9 @@
     font-family: Arial, sans-serif;
 }
 
-.simplify-btn:hover {
-    background-color: #45a049;
-}
 
 .original-btn {
     background-color: #ccc;
     /* Gray */
     color: #000;
-}
-
-.original-btn:hover {
-    background-color: #bbb;
 }
