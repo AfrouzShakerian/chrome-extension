@@ -56,35 +56,33 @@ function simplifyParagraph(paragraph) {
             if (data.choices && data.choices[0].message.content) {
                 const simplifiedText = data.choices[0].message.content.trim();
 
-                // Wrap paragraph contents in a container
+                // Wrap paragraph in a container
                 const parent = paragraph.parentNode;
                 const container = document.createElement('div');
                 container.className = 'paragraph-container';
                 parent.replaceChild(container, paragraph);
                 container.appendChild(paragraph);
 
-                // Wrap the paragraph text in a span for text-content
-                const textContent = document.createElement('span');
-                textContent.className = 'text-content';
-                textContent.innerText = simplifiedText;
-                paragraph.innerHTML = '';
-                paragraph.appendChild(textContent);
+                // Create a new <p> for the simplified text
+                const simplifiedParagraph = document.createElement('p');
+                simplifiedParagraph.className = 'simplified-text';
+                simplifiedParagraph.innerText = simplifiedText;
+                simplifiedParagraph.style.backgroundColor = '#f0f8ff'; // Highlight background
+                simplifiedParagraph.style.display = 'block'; // Show simplified by default
+                simplifiedParagraph.style.borderRadius = '4px'; // Rounded edges
+                simplifiedParagraph.style.padding = '10px'; // Add padding
+                container.appendChild(simplifiedParagraph);
 
-                paragraph.dataset.original = originalText; // Store original text
-                paragraph.dataset.simplified = simplifiedText; // Store simplified text
-                paragraph.style.backgroundColor = '#f0f8ff'; // Add background color
-                paragraph.style.borderRadius = '4px'; // Add softer edges
-                paragraph.style.transition = 'background-color 0.3s ease-in-out'; // Smooth transition
-                paragraph.style.position = 'relative'; // Ensure relative positioning for button placement
+                // Store references in the original paragraph
+                paragraph.dataset.original = originalText;
+                paragraph.dataset.simplified = 'true';
+                paragraph.style.display = 'none'; // Hide original by default
 
-                // Add the button container
-                const buttonContainer = document.createElement('span');
+                // Add buttons (but they remain hidden initially)
+                const buttonContainer = document.createElement('div');
                 buttonContainer.className = 'button-container';
-                buttonContainer.style.position = 'absolute';
-                buttonContainer.style.top = '0';
-                buttonContainer.style.right = '0';
-                buttonContainer.style.visibility = 'hidden'; // Default to hidden
-                buttonContainer.style.opacity = '0'; // Default to transparent
+                buttonContainer.style.visibility = 'hidden';
+                buttonContainer.style.opacity = '0';
 
                 const simplifyButton = document.createElement('button');
                 simplifyButton.textContent = 'Simplify';
@@ -96,45 +94,27 @@ function simplifyParagraph(paragraph) {
 
                 buttonContainer.appendChild(simplifyButton);
                 buttonContainer.appendChild(originalButton);
-                paragraph.appendChild(buttonContainer);
+                container.appendChild(buttonContainer);
+
+                // Add hover functionality to toggle text and show buttons
+                container.addEventListener('mouseover', () => {
+                    paragraph.style.display = 'block'; // Show original text
+                    simplifiedParagraph.style.display = 'none'; // Hide simplified text
+                    buttonContainer.style.visibility = 'visible'; // Show buttons
+                    buttonContainer.style.opacity = '1';
+                });
+
+                container.addEventListener('mouseout', () => {
+                    paragraph.style.display = 'none'; // Hide original text
+                    simplifiedParagraph.style.display = 'block'; // Show simplified text
+                    buttonContainer.style.visibility = 'hidden'; // Hide buttons
+                    buttonContainer.style.opacity = '0';
+                });
             } else {
                 console.error('Error simplifying text:', data);
             }
         })
         .catch(error => console.error('OpenAI API error:', error));
-    });
-}
-
-// Add hover listeners to show original text and buttons on hover
-function addHoverListeners(paragraph) {
-    paragraph.addEventListener('mouseover', () => {
-        if (paragraph.dataset.original) {
-            const textNode = paragraph.querySelector('.text-content');
-            if (textNode) {
-                textNode.innerText = paragraph.dataset.original; // Show original text
-            }
-            paragraph.style.backgroundColor = ''; // Remove background color
-            const buttonContainer = paragraph.querySelector('.button-container');
-            if (buttonContainer) {
-                buttonContainer.style.visibility = 'visible'; // Show buttons
-                buttonContainer.style.opacity = '1'; // Make buttons fully visible
-            }
-        }
-    });
-
-    paragraph.addEventListener('mouseout', () => {
-        if (paragraph.dataset.simplified) {
-            const textNode = paragraph.querySelector('.text-content');
-            if (textNode) {
-                textNode.innerText = paragraph.dataset.simplified; // Show simplified text
-            }
-            paragraph.style.backgroundColor = '#f0f8ff'; // Restore background color
-            const buttonContainer = paragraph.querySelector('.button-container');
-            if (buttonContainer) {
-                buttonContainer.style.visibility = 'hidden'; // Hide buttons
-                buttonContainer.style.opacity = '0'; // Make buttons invisible
-            }
-        }
     });
 }
 
@@ -144,7 +124,6 @@ function startSimplifying() {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
                 simplifyParagraph(entry.target); // Simplify paragraph
-                addHoverListeners(entry.target); // Add hover listeners
             }
         });
     });
@@ -161,24 +140,26 @@ function stopSimplifying() {
         observer.disconnect(); // Stop observing paragraphs
         observer = null;
     }
-    const paragraphs = document.querySelectorAll('p');
-    paragraphs.forEach((paragraph) => {
-        if (paragraph.dataset.original) {
-            paragraph.innerText = paragraph.dataset.original; // Restore original text
-            paragraph.removeAttribute('data-simplified');
-            paragraph.style.backgroundColor = ''; // Reset background color
+
+    // Reset paragraphs to their original state
+    const containers = document.querySelectorAll('.paragraph-container'); // Find all processed containers
+    containers.forEach((container) => {
+        const originalParagraph = container.querySelector('[data-original]'); // Get original paragraph
+        if (originalParagraph) {
+            originalParagraph.style.display = 'block'; // Make sure original text is visible
+            originalParagraph.removeAttribute('data-simplified'); // Remove the marker
+            container.replaceWith(originalParagraph); // Replace container with original paragraph
         }
     });
-    console.log('Simplification stopped.');
+
+    console.log('Simplification stopped. All paragraphs reset to their original state.');
 }
 
 // Listen for activation/deactivation messages
 chrome.runtime.onMessage.addListener((message) => {
     if (message.action === 'activate') {
-        console.log('Extension activated. Simplifying paragraphs...');
         startSimplifying();
     } else if (message.action === 'deactivate') {
-        console.log('Extension deactivated. Stopping simplification...');
         stopSimplifying();
     }
 });
