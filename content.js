@@ -22,16 +22,7 @@ function simplifyParagraph(paragraph) {
             return;
         }
 
-        const sentenceCount = originalText.split(/(?<!\w\.\w\.)(?<![A-Z][a-z]\.)(?<!\s[A-Z]\.)[.!?]\s+/).length;
-        const prompt = sentenceCount > 3
-            ? `You are a helpful assistant that simplifies text for people with cognitive disabilities.
-               If the input text has more than three sentences, simplify it into shorter, easy-to-read bullet points.
-               Otherwise, rewrite it as a simplified version while ensuring it is concise and does not exceed the original length.
-               Simplify the following text:
-               ${originalText}`
-            : `You are a helpful assistant that simplifies text for people with cognitive disabilities.
-               Rewrite the following text as a simplified version while ensuring it is concise and does not exceed the original length:
-               ${originalText}`;
+        const prompt = `You are a helpful assistant who simplifies text for people with cognitive disabilities or reading challenges. Your task is to rewrite the following text using simple words, short sentences, and a clear structure. Avoid jargon, reduce unnecessary details, and ensure the meaning is preserved. Here is the text to simplify:${originalText}`;
 
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -91,22 +82,93 @@ function simplifyParagraph(paragraph) {
                 const originalButton = document.createElement('button');
                 originalButton.textContent = 'Show Original';
                 originalButton.className = 'original-btn';
+                originalButton.dataset.state = 'simplified'; // Default state
 
                 buttonContainer.appendChild(simplifyButton);
                 buttonContainer.appendChild(originalButton);
                 container.appendChild(buttonContainer);
 
-                // Add hover functionality to toggle text and show buttons
+                // Simplify button functionality
+                simplifyButton.addEventListener('click', () => {
+                    const currentSimplifiedText = simplifiedParagraph.innerText;
+                    const furtherSimplifyPrompt = `
+                        You are a helpful assistant that simplifies text for people with cognitive disabilities.
+                        Take the following text and make it even simpler by using very basic words, shorter sentences,
+                        and removing any unnecessary details while keeping the core meaning intact:
+                        ${currentSimplifiedText}
+                    `;
+
+                    fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-3.5-turbo',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: furtherSimplifyPrompt
+                                }
+                            ],
+                            max_tokens: 200,
+                            temperature: 0.4
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.choices && data.choices[0].message.content) {
+                            simplifiedParagraph.innerText = data.choices[0].message.content.trim();
+
+                            // Show the updated simplified text
+                            paragraph.style.display = 'none'; // Hide original text
+                            simplifiedParagraph.style.display = 'block'; // Show simplified text
+
+                            // Reset the state of the Show Original button
+                            originalButton.textContent = 'Show Original';
+                            originalButton.dataset.state = 'simplified';
+                        } else {
+                            console.error('Error further simplifying text:', data);
+                        }
+                    })
+                    .catch(error => console.error('OpenAI API error:', error));
+                });
+
+                // Show Original button functionality
+                originalButton.addEventListener('click', () => {
+                    const isShowingOriginal = originalButton.dataset.state === 'original';
+
+                    if (isShowingOriginal) {
+                        // Switch to simplified text
+                        paragraph.style.display = 'none'; // Hide original text
+                        simplifiedParagraph.style.display = 'block'; // Show simplified text
+                        originalButton.textContent = 'Show Original'; // Update button text
+                        originalButton.dataset.state = 'simplified'; // Update state
+                    } else {
+                        // Switch to original text
+                        paragraph.style.display = 'block'; // Show original text
+                        simplifiedParagraph.style.display = 'none'; // Hide simplified text
+                        originalButton.textContent = 'Show Simplified'; // Update button text
+                        originalButton.dataset.state = 'original'; // Update state
+                    }
+                });
+
+                // Modify hover functionality to respect the button state
                 container.addEventListener('mouseover', () => {
-                    paragraph.style.display = 'block'; // Show original text
-                    simplifiedParagraph.style.display = 'none'; // Hide simplified text
+                    if (originalButton.dataset.state === 'simplified') {
+                        paragraph.style.display = 'block'; // Show original text
+                        simplifiedParagraph.style.display = 'none'; // Hide simplified text
+                    }
                     buttonContainer.style.visibility = 'visible'; // Show buttons
                     buttonContainer.style.opacity = '1';
                 });
 
                 container.addEventListener('mouseout', () => {
-                    paragraph.style.display = 'none'; // Hide original text
-                    simplifiedParagraph.style.display = 'block'; // Show simplified text
+                    if (originalButton.dataset.state === 'simplified') {
+                        paragraph.style.display = 'none'; // Hide original text
+                        simplifiedParagraph.style.display = 'block'; // Show simplified text
+                    }
                     buttonContainer.style.visibility = 'hidden'; // Hide buttons
                     buttonContainer.style.opacity = '0';
                 });
