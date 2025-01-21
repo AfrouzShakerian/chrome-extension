@@ -3,10 +3,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveButton = document.getElementById('save-key');
     const status = document.getElementById('status');
 
+    // Disable save button initially if input is empty
+    saveButton.disabled = !apiKeyInput.value.trim();
+
+    // Enable or disable save button based on input
+    apiKeyInput.addEventListener('input', () => {
+        saveButton.disabled = !apiKeyInput.value.trim(); // Disable if input is empty
+    });
+
     // Load the saved API key when the page loads
     chrome.storage.local.get(['openaiApiKey'], (data) => {
         if (data.openaiApiKey) {
             apiKeyInput.value = data.openaiApiKey;
+            saveButton.disabled = false; // Enable save button if a key exists
         }
     });
 
@@ -16,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (apiKey) {
             chrome.storage.local.set({ openaiApiKey: apiKey, extensionActive: true }, () => {
                 status.textContent = 'API Key saved and extension activated!';
-                setTimeout(() => (status.textContent = ''), 3000); // Clear message after 3 seconds
+                setTimeout(() => (status.textContent = ''), 5000); // Clear message after 5 seconds
                 console.log('API Key saved and extension activated.');
             });
         } else {

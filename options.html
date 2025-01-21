@@ -9,9 +9,19 @@
 <body class="options-body">
     <div class="options-container">
         <h1 class="options-header">Extension Options</h1>
-        <label for="api-key" class="input-label">Enter API Key:</label>
-        <input type="password" id="api-key" class="input-field" placeholder="Your OpenAI API Key" />
-        <button type="button" id="save-key" class="btn-primary">Save API Key</button>
+
+        <!-- Label and Input Field -->
+        <div class="input-group">
+            <label for="api-key" class="input-label">Enter API Key:</label>
+            <input type="password" id="api-key" class="input-field" placeholder="Your OpenAI API Key" />
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+            <button type="button" id="save-key" class="btn-primary">Save API Key</button>
+            <button type="button" id="delete-key" class="btn-secondary">Delete API Key</button>
+        </div>
+
         <p id="status" class="status-message"></p>
     </div>
     <script src="options.js"></script>
