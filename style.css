@@ -1,3 +1,55 @@
+/* Popup Styles */
+.popup-body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    width: 300px;
+}
+
+.popup-body .popup-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.popup-body .popup-header {
+    font-size: 1.5rem;
+    color: #333333;
+    margin-bottom: 10px;
+}
+
+.popup-body .btn-primary {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+.popup-body .btn-primary:hover {
+    background-color: #45a049;
+}
+
+.popup-body .status-message {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #555555;
+}
+
 /* Toggle Switch Styles */
 .toggle-container {
     display: flex;
@@ -53,58 +105,52 @@ input:checked + .slider:before {
     transform: translateX(25px);
 }
 
-/* Popup Styles */
-.popup-body {
+/* Options Page Styles */
+.options-body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
+    background-color: #f0f0f0;
+    height: 100vh; /* Ensure it fills the screen */
     display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 200px;
-    width: 300px;
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
 }
 
-.popup-body .popup-container {
+.options-container {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     padding: 20px;
     width: 100%;
+    max-width: 600px; /* Adjust for a wider layout */
     text-align: center;
     box-sizing: border-box;
 }
 
-.popup-body .popup-header {
-    font-size: 1.5rem;
+.options-header {
+    font-size: 2rem;
     color: #333333;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.popup-body .btn-primary {
-    background-color: #4CAF50;
+.options-body .btn-primary {
+    background-color: #4CAF50; /* Different color for Options page */
     color: white;
     border: none;
-    padding: 10px 15px;
+    padding: 10px 20px;
     border-radius: 5px;
     font-size: 1rem;
     cursor: pointer;
-    width: 100%;
-    margin-top: 10px;
     box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+    margin-top: 15px;
 }
 
-.popup-body .btn-primary:hover {
-    background-color: #45a049;
+.options-body .btn-primary:hover {
+    background-color: #45a049; /* Different hover effect */
 }
 
-.popup-body .status-message {
-    margin-top: 10px;
-    font-size: 0.9rem;
-    color: #555555;
-}
-
+/* Button Container Styles (Simplify and Show Original) */
 .button-container {
     visibility: hidden;
     opacity: 0;
