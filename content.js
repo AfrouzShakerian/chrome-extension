@@ -15,12 +15,14 @@ function simplifyParagraph(paragraph) {
 
     const originalText = paragraph.innerText.trim();
 
-    chrome.storage.local.get('openaiApiKey', (result) => {
-        const apiKey = result.openaiApiKey;
-        if (!apiKey) {
-            console.warn('API key is missing! Please set it in the popup.');
+    chrome.runtime.sendMessage({ action: 'getApiKey' }, (response) => {
+        if (!response.success || !response.apiKey) {
+            console.warn('API key is missing or decryption failed! Please set it in the popup.');
             return;
         }
+    
+        const apiKey = response.apiKey; // Decrypted API key
+    
 
         const prompt = `You are a helpful assistant who simplifies text for people with cognitive disabilities or reading challenges. Your task is to rewrite the following text using simple words, short sentences, and a clear structure. Avoid jargon, reduce unnecessary details, and ensure the meaning is preserved. Here is the text to simplify:${originalText}`;
 

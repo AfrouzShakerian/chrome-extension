@@ -12,11 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
         saveButton.disabled = !apiKeyInput.value.trim(); // Disable if input is empty
     });
 
-    // Load the saved API key when the page loads
-    chrome.storage.local.get(['openaiApiKey'], (data) => {
-        if (data.openaiApiKey) {
-            apiKeyInput.value = data.openaiApiKey;
+    // Load the saved API key when the page loads (fetch encrypted key from background)
+    chrome.runtime.sendMessage({ action: 'getApiKey' }, (response) => {
+        if (response.success) {
+            apiKeyInput.value = response.apiKey; // Display the decrypted API key
             saveButton.disabled = false; // Enable save button if a key exists
+        } else {
+            console.log('No API Key found or failed to decrypt:', response.error);
         }
     });
 
@@ -24,12 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
     saveButton.addEventListener('click', () => {
         const apiKey = apiKeyInput.value.trim();
         if (apiKey) {
-            chrome.storage.local.set({ openaiApiKey: apiKey, extensionActive: true }, () => {
-                apiKeyInput.value = ''; // Clear input field
-                saveButton.disabled = true; // Disable save button since input is cleared
-                status.textContent = 'API Key saved and extension activated!';
-                setTimeout(() => (status.textContent = ''), 5000); // Clear message after 5 seconds
-                console.log('API Key saved and extension activated.');
+            chrome.runtime.sendMessage({ action: 'encryptApiKey', apiKey }, (response) => {
+                if (response.success) {
+                    apiKeyInput.value = ''; // Clear the input field
+                    saveButton.disabled = true; // Disable save button since input is cleared
+                    status.textContent = 'API Key encrypted and saved!';
+                    setTimeout(() => (status.textContent = ''), 5000); // Clear message after 5 seconds
+                } else {
+                    status.textContent = `Error: ${response.error}`;
+                }
             });
         } else {
             status.textContent = 'Please enter a valid API Key.';
@@ -38,14 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Delete the API key from storage
     deleteButton.addEventListener('click', () => {
-        chrome.storage.local.remove(['openaiApiKey'], () => {
-            chrome.storage.local.set({ extensionActive: false }, () => {
+        chrome.runtime.sendMessage({ action: 'deleteApiKey' }, (response) => {
+            if (response.success) {
                 apiKeyInput.value = ''; // Clear the input field
                 saveButton.disabled = true; // Disable save button
                 status.textContent = 'API Key deleted successfully.';
                 setTimeout(() => (status.textContent = ''), 5000); // Clear message after 5 seconds
                 console.log('API Key deleted and extension deactivated.');
-            });
+            } else {
+                status.textContent = `Error: ${response.error}`;
+            }
         });
     });
 });

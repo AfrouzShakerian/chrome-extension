@@ -3,44 +3,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleStatus = document.getElementById('toggle-status');
     const optionsButton = document.getElementById('options-button');
 
-    // Initialize toggle state from storage
-    chrome.storage.local.get(['extensionActive', 'openaiApiKey'], (data) => {
-        const isActive = data.extensionActive || false;
-        const hasApiKey = Boolean(data.openaiApiKey);
-
-        // If no API Key, disable the toggle and show an error message
-        if (!hasApiKey) {
+    // Initialize toggle state from the background script
+    chrome.runtime.sendMessage({ action: 'getApiKey' }, (response) => {
+        if (!response.success || !response.apiKey) {
             toggleExtension.disabled = true;
             toggleStatus.textContent = 'OpenAI API Key is required!';
             toggleStatus.style.color = 'red';
         } else {
-            toggleExtension.checked = isActive;
-            toggleStatus.textContent = isActive
-                ? 'Extension is Activated'
-                : 'Extension is Deactivated';
+            chrome.storage.local.get('extensionActive', (data) => {
+                const isActive = data.extensionActive || false;
+                toggleExtension.checked = isActive;
+                toggleStatus.textContent = isActive
+                    ? 'Extension is Activated'
+                    : 'Extension is Deactivated';
+            });
         }
     });
 
     // Handle toggle change
     toggleExtension.addEventListener('change', () => {
-        chrome.storage.local.get('openaiApiKey', (data) => {
-            if (!data.openaiApiKey) {
-                // Block toggling if no API Key
+        chrome.runtime.sendMessage({ action: 'getApiKey' }, (response) => {
+            if (!response.success || !response.apiKey) {
                 toggleExtension.checked = false;
                 toggleStatus.textContent = 'API Key is required to activate the extension.';
-            } else {
-                const isActive = toggleExtension.checked;
-                chrome.storage.local.set({ extensionActive: isActive }, () => {
-                    toggleStatus.textContent = isActive
-                        ? 'Extension is Activated'
-                        : 'Extension is Deactivated';
-
-                    // Send message to content scripts
-                    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                        chrome.tabs.sendMessage(tabs[0].id, { action: isActive ? 'activate' : 'deactivate' });
-                    });
-                });
+                return;
             }
+
+            const isActive = toggleExtension.checked;
+            chrome.storage.local.set({ extensionActive: isActive }, () => {
+                toggleStatus.textContent = isActive
+                    ? 'Extension is Activated'
+                    : 'Extension is Deactivated';
+
+                // Notify the content script about the activation state
+                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                    chrome.tabs.sendMessage(tabs[0].id, { action: isActive ? 'activate' : 'deactivate' });
+                });
+            });
         });
     });
 
