@@ -60,10 +60,6 @@ function simplifyParagraph(paragraph) {
                 const simplifiedParagraph = document.createElement('p');
                 simplifiedParagraph.className = 'simplified-text';
                 simplifiedParagraph.innerText = simplifiedText;
-                simplifiedParagraph.style.backgroundColor = '#f0f8ff'; // Highlight background
-                simplifiedParagraph.style.display = 'block'; // Show simplified by default
-                simplifiedParagraph.style.borderRadius = '4px'; // Rounded edges
-                simplifiedParagraph.style.padding = '10px'; // Add padding
                 container.appendChild(simplifiedParagraph);
 
                 // Store references in the original paragraph
@@ -74,8 +70,6 @@ function simplifyParagraph(paragraph) {
                 // Add buttons (but they remain hidden initially)
                 const buttonContainer = document.createElement('div');
                 buttonContainer.className = 'button-container';
-                buttonContainer.style.visibility = 'hidden';
-                buttonContainer.style.opacity = '0';
 
                 const simplifyButton = document.createElement('button');
                 simplifyButton.textContent = 'Simplify';

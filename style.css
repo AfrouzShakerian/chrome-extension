@@ -232,14 +232,24 @@ input:checked+.slider:before {
 
 /* Button Container Styles (Simplify and Show Original) */
 .button-container {
+    position: absolute; /* Position relative to the paragraph-container */
+    top: 0; 
+    right: 0;
+    display: flex;
+    gap: 5px;
     visibility: hidden;
-    opacity: 0;
-    transition: visibility 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 0; 
 }
 
 .paragraph-container:hover .button-container {
     visibility: visible;
     opacity: 1;
+    transition: opacity 0.5s linear 0.5s;
+}
+
+.paragraph-container {
+    position: relative;
+    padding-top: 2.1rem;
 }
 
 .simplify-btn,
@@ -260,4 +270,15 @@ input:checked+.slider:before {
     background-color: #ccc;
     /* Gray */
     color: #000;
+}
+
+.simplified-text {
+    background-color: #f0f8ff;
+    display: block;
+    border-radius: 4px;
+    transition: background-color 1s linear;
+}
+
+.simplified-text:hover {
+    background-color: #f0f0f0;
 }
