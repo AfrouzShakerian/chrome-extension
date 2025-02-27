@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const apiKeyInput = document.getElementById('api-key');
     const saveButton = document.getElementById('save-key');
-    const deleteButton = document.getElementById('delete-key'); // New Delete button
+    const deleteButton = document.getElementById('delete-key');
     const status = document.getElementById('status');
 
     // Disable save button initially if input is empty

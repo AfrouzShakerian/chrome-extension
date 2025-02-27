@@ -24,7 +24,11 @@ function simplifyParagraph(paragraph) {
         const apiKey = response.apiKey; // Decrypted API key
     
 
-        const prompt = `You are a helpful assistant who simplifies text for people with cognitive disabilities or reading challenges. Your task is to rewrite the following text using simple words, short sentences, and a clear structure. Avoid jargon, reduce unnecessary details, and ensure the meaning is preserved. Here is the text to simplify:${originalText}`;
+        const prompt = `You are a helpful assistant who simplifies text for people with understanding problems.
+                        Your task is to simplify the following text using simple words, short sentences,
+                        and a clear structure, so it is easy to understand. Avoid jargon,
+                        reduce unnecessary details, and ensure the meaning is preserved.
+                        Here is the text to simplify:${originalText}`;
 
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -89,7 +93,7 @@ function simplifyParagraph(paragraph) {
                     const currentSimplifiedText = simplifiedParagraph.innerText;
                     const furtherSimplifyPrompt = `
                         You are a helpful assistant that simplifies text for people with cognitive disabilities.
-                        Take the following text and make it even simpler by using very basic words, shorter sentences,
+                        Take the following text and make it even simpler by using very basic words, making shorter sentences, as if you are explaining to a 12 years old,
                         and removing any unnecessary details while keeping the core meaning intact:
                         ${currentSimplifiedText}
                     `;
