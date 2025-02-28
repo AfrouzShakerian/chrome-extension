@@ -59,41 +59,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- CUSTOM PROMPT FUNCTIONALITY BELOW ---
 
     const promptInput = document.getElementById('custom-prompt');
-    const useCustomPromptCheckbox = document.getElementById('use-custom-prompt');
     const savePromptButton = document.getElementById('save-prompt');
+    const deletePromptButton = document.getElementById('delete-prompt');
 
-    // Load saved prompt and checkbox state
-    chrome.storage.sync.get(['customPrompt', 'useCustomPrompt'], (data) => {
+    // Load saved prompt
+    chrome.storage.sync.get('customPrompt', (data) => {
         if (data.customPrompt) {
             promptInput.value = data.customPrompt;
         }
-        useCustomPromptCheckbox.checked = data.useCustomPrompt || false;
     });
 
     // Function to save the custom prompt
     function savePrompt() {
         const customPrompt = promptInput.value.trim();
         if (customPrompt) {
-            chrome.storage.sync.set({ customPrompt, useCustomPrompt: true }, () => {
-                useCustomPromptCheckbox.checked = true;
+            chrome.storage.sync.set({ customPrompt }, () => {
                 status.textContent = "Custom prompt saved!";
                 setTimeout(() => status.textContent = '', 3000);
             });
+        } else {
+            // ❌ Show error if input is empty
+            status.textContent = "Error: Please enter a prompt before saving.";
+            setTimeout(() => status.textContent = '', 3000);
         }
     }
+
+    // Function to delete the custom prompt
+    function deletePrompt() {
+        chrome.storage.sync.remove('customPrompt', () => {
+            promptInput.value = '';
+            status.textContent = "Custom prompt deleted.";
+            setTimeout(() => status.textContent = '', 3000);
+        });
+    }
+
+    // Save prompt when clicking "Save Prompt" button
+    savePromptButton.addEventListener('click', savePrompt);
+
+    // Delete prompt when clicking "Delete Prompt" button
+    deletePromptButton.addEventListener('click', deletePrompt);
 
     // Save prompt when pressing Enter
     promptInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             savePrompt();
         }
-    });
-
-    // Save prompt when clicking "Save Prompt" button
-    savePromptButton.addEventListener('click', savePrompt);
-
-    // Save checkbox state when toggled
-    useCustomPromptCheckbox.addEventListener('change', () => {
-        chrome.storage.sync.set({ useCustomPrompt: useCustomPromptCheckbox.checked });
     });
 });
