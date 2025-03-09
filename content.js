@@ -53,11 +53,13 @@ function simplifyParagraph(paragraph) {
             fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
+
+                    
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
-                    model: 'gpt-3.5-turbo',
+                    model: 'gpt-4o-mini',
                     messages: [{ role: 'system', content: prompt }],
                     max_tokens: 200,
                     temperature: 0.4
@@ -128,7 +130,7 @@ function simplifyParagraph(paragraph) {
                                     'Authorization': `Bearer ${apiKey}`
                                 },
                                 body: JSON.stringify({
-                                    model: 'gpt-3.5-turbo',
+                                    model: 'gpt-4o-mini',
                                     messages: [{ role: 'system', content: furtherSimplifyPrompt }],
                                     max_tokens: 200,
                                     temperature: 0.4
